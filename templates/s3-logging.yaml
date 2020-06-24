@@ -1,0 +1,81 @@
+---
+Description: |
+  S3 bucket configured to act as a target for Amazon S3 server access logging.
+  This bucket is configured to meet the requirements outlined in
+  https://amzn.to/2AOzypI.
+
+  This bucket also expects the `s3-logging-iam-role` Systems Manager parameter
+  to be defined, specifying the ARN of the IAM role used to administer the
+  bucket.
+
+Parameters:
+  TargetBucketNamePrefix:
+    Type: String
+    Default: "brokentech-logs"
+    Description: |
+      The prefix for the name of the S3 bucket which will act as the target for
+      S3 server access logs in the AWS account. The AWS account ID will be
+      appended to the bucket name to allow for multi-account configurations.
+
+Resources:
+  serverLoggingBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName:
+        Fn::Sub: "${TargetBucketNamePrefix}-${AWS::AccountId}"
+      AccessControl: LogDeliveryWrite
+      LoggingConfiguration:
+        DestinationBucketName:
+          Fn::Sub: "${TargetBucketNamePrefix}-${AWS::AccountId}"
+        LogFilePrefix:
+          Fn::Sub: "${TargetBucketNamePrefix}-${AWS::AccountId}"
+      LifecycleConfiguration:
+        Rules:
+          - Id: InfrequentAccess
+            Status: Enabled
+            Transitions:
+              - TransitionInDays: 30
+                StorageClass: STANDARD_IA
+          - Id: DeepArchive
+            Status: Enabled
+            Transitions:
+              - TransitionInDays: 60
+                StorageClass: DEEP_ARCHIVE
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+
+  serverLoggingRole:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket:
+        Ref: serverLoggingBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: loggingAdminRole
+            Effect: Allow
+            Principal:
+              AWS:
+                - "{{resolve:ssm:s3-logging-iam-role:1}}"
+            Action:
+              - s3:PutObject
+            Resource:
+              Fn::Join:
+                - ""
+                - - "arn:aws:s3:::"
+                  - Ref: serverLoggingBucket
+                  - "/*"
+
+Outputs:
+  s3LogBucket:
+    Export:
+      Name: S3ServerAccessLogTarget
+    Value:
+      Ref: serverLoggingBucket
+    Description: |
+      The S3 target bucket to use for server access logging in this AWS
+      account.

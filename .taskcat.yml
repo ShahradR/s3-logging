@@ -1,0 +1,10 @@
+---
+project:
+  name: s3-logging
+  regions:
+    - ca-central-1
+  s3_bucket: brokentech-cfn
+
+tests:
+  default:
+    template: ./templates/s3-logging.yaml
