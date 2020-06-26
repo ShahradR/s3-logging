@@ -1,0 +1,17 @@
+name: Integration tests
+
+on: [push, pull_request]
+
+jobs:
+  taskcat:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-2
+      - uses: ShahradR/action-taskcat@57c430eac8dc0deaf17baef8215f3a873f5a858e
