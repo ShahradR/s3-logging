@@ -6,5 +6,20 @@ project:
   s3_bucket: brokentech-cfn
 
 tests:
-  default:
+  s3-log-bucket-with-default-parameters:
     template: ./templates/s3-logging.yaml
+
+  product-with-default-parameters:
+    template: ./templates/s3-logging-product.yaml
+    parameters:
+      TemplateUrlPrefix: https://$[taskcat_autobucket].s3.ca-central-1.amazonaws.com/s3-logging/
+
+  product-with-overriden-parameters:
+    template: ./templates/s3-logging-product.yaml
+    parameters:
+      Owner: taskcat-$[taskcat_random-string]
+      Distributor: taskcat-$[taskcat_random-string]
+      SupportUrl: http://taskcat-$[taskcat_random-string]
+      SupportDescription: taskcat-$[taskcat_random-string]
+      SupportEmail: taskcat@$[taskcat_random-string].test
+      TemplateUrlPrefix: https://$[taskcat_autobucket].s3.ca-central-1.amazonaws.com/s3-logging/
