@@ -1,0 +1,76 @@
+---
+Description: |
+  Service Catalog product to deploy a bucket for use with S3 server access
+  logging.
+
+Parameters:
+  Owner:
+    Type: String
+    Description: |
+      Service Catalog product owner.
+    Default: Shahrad Rezaei
+  Distributor:
+    Type: String
+    Description: |
+      Service Catalog product distributor.
+    Default: BrokenTech
+  SupportUrl:
+    Type: String
+    Description: |
+      URL for users to get support. Defaults to the GitHub repositories where
+      the CloudFormation templates are stored.
+    Default: https://github.com/ShahradR/s3-logging
+  SupportDescription:
+    Type: String
+    Default: |
+      To report any issues, please visit the project's GitHub repository and
+      open an issue.
+  SupportEmail:
+    Type: String
+    Default: shahrad@rezaei.io
+  TemplateUrlPrefix:
+    Type: String
+    Description: |
+      Prefix for the template URL. This should point to the S3 bucket where the
+      project is stored. This CloudFormation template will append
+      "templates/s3-logging.yaml" to the end of the value provided in this
+      parameter to create resources in other YAML files.
+
+Resources:
+  S3LoggingProduct:
+    Type: "AWS::ServiceCatalog::CloudFormationProduct"
+    Properties:
+      Name: Amazon S3 logging bucket
+      Description: |
+        Creates a bucket to use as a target for Amazon S3 server access logging.
+        When creating S3 buckets, reference this product when configuring server
+        access logging to have access information shipped over.
+
+        Because S3 bucket names are globally unique, and one such account needs
+        to exist in each AWS account, the bucket name will be appended with the
+        AWS account ID. Note that there are some security implications with
+        making the AWS account ID public. See https://bit.ly/2E9iThC for an
+        example of how the account ID could be manipulated to expose additional
+        information.
+      Owner:
+        Ref: Owner
+      Distributor:
+        Ref: Distributor
+      SupportDescription:
+        Ref: SupportDescription
+      SupportEmail:
+        Ref: SupportEmail
+      SupportUrl:
+        Ref: SupportUrl
+      AcceptLanguage: en
+      ProvisioningArtifactParameters:
+        - Info:
+            LoadTemplateFromURL:
+              Fn::Sub: "${TemplateUrlPrefix}templates/s3-logging.yaml"
+          Name: v1.0
+          Description: Baseline version
+
+Outputs:
+  ProductId:
+    Value:
+      Ref: S3LoggingProduct
